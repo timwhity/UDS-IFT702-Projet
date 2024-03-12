@@ -1,0 +1,66 @@
+IFT608-702 - Projet - Phase 1 - Spécifications sommaires
+
+
+A. Domaines et problématiques :
+
+- Choisir un domaine pour explorer l'application de ceratines approches de planification et leurs efficacités.
+
+
+- Suggestions (environnements) :
+
+* Open AI Gymnasium - (environements ATARI) : 
+https://gymnasium.farama.org/environments/atari/complete_list/
+
+- Principe de fonctionnement de la plateforme :
+https://gymnasium.farama.org/content/basic_usage/
+
+- Code-source et installation des APIs :
+https://github.com/Farama-Foundation/Gymnasium
+
+
+
+* Unity ML environments :
+https://unity.com/products/machine-learning-agents
+
+
+
+B. Applications :
+
+- Comparer (via tableaux et graphiques) deux implémentations, par rapport à :
+	- l'efficacité d'apprentissage (et les contraintes, s'il y a lieu, d'échantillonnage), 
+	- la gestion des ressources matérielles et logicielles, 
+	- le temps d'exécution et 
+	- les qualités des solutions (plans).
+
+- Deux algorithmes de votre choix, dont chacun DOIT appartenir à une approche (famille d'algorithmes de planification) spécifiée, comme suit :
+
+1ere approche : état/action-valeur (1 algo à implémenter)
+2eme approche : policy/value-gradient (1 algo à implémenter)
+
+
+- Suggestions d'algorithmes à explorer et à implémenter, totalement ou en partie (adaptation) à partir de code-source libre : 
+
+PPO (Proximal Policy Optimization) 
+MA-POCA (MultiAgent POsthumous Credit Assignement) 
+RLHC (Reinforcement learning from hierarchical critics)
+A3C (Asynchronous Advatange Actor-Critic) 
+TRPO (Trust Region Policy Optimization)
+DQN (Deep Q-Network)
+DPN (Deep Policy Network)
+MPO (Maximum a Posteriori Policy Optimisation)
+DDPG (Deep Deterministic Policy Gradient)
+CMA-ES (Covariance Matrix Adaptation Evolution Strategy)
+ ou autres, de votre choix...
+
+
+* Phase 1 :
+
+- Présentation du domaine choisi : illustrations, applications existantes, problématiques traitées, références, etc..
+- Présentation des deux algos (applications sousjacentes et état de l'art), explication détaillée (via exemples) de leurs fonctionnements et justification de leurs choix.
+
+Durée : 15 minutes (présentation) + 5 minutes de questions
+Livrable : fichier PPTX ou PDF de la présentation.
+Soumission : via Moodle dans le devoir approprié (Phase 1)
+
+
+
