@@ -1,0 +1,1 @@
+gymnasium[atari, accept-rom-licesnse]
