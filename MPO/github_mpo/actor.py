@@ -76,6 +76,7 @@ class ActorDiscrete(nn.Module):
         :return:
         """
         B = state.size(0)
+        print(state.size())
         h = F.relu(self.lin1(state))
         h = F.relu(self.lin2(h))
         h = self.out(h)

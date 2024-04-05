@@ -41,7 +41,7 @@ def main():
     parser.add_argument('--sample_action_num', type=int, default=64,
                         help='number of sampled actions')
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--iteration_num', type=int, default=1000,
+    parser.add_argument('--iteration_num', type=int, default=10,
                         help='number of iteration to learn')
     parser.add_argument('--episode_rerun_num', type=int, default=3,
                         help='number of reruns of sampled episode')
@@ -53,7 +53,7 @@ def main():
                         help='number of episodes to evaluate')
     parser.add_argument('--evaluate_episode_maxstep', type=int, default=300,
                         help='maximum evaluate steps of an episode')
-    parser.add_argument('--log_dir', type=str, default=None,
+    parser.add_argument('--log_dir', type=str, default='logs',
                         help='log directory')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--load', type=str, default=None,

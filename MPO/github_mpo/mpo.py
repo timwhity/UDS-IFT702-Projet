@@ -3,16 +3,15 @@ from time import sleep
 import numpy as np
 from scipy.optimize import minimize
 from tqdm import tqdm
-import gym
 import torch
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
 from torch.distributions import MultivariateNormal, Categorical
 from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 from tensorboardX import SummaryWriter
-from mpo.actor import ActorContinuous, ActorDiscrete
-from mpo.critic import CriticContinuous, CriticDiscrete
-from mpo.replaybuffer import ReplayBuffer
+from actor import ActorContinuous, ActorDiscrete
+from critic import CriticContinuous, CriticDiscrete
+from replaybuffer import ReplayBuffer
 
 
 def bt(m):

@@ -1,1 +1,3 @@
 .venv
+MPO/github_mpo/logs*
+*.pyc
