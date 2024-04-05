@@ -1,3 +1,9 @@
+# Environments
 .venv
-MPO/github_mpo/logs*
+
+# Logs
+*logs*
+
+# pycache
+*__pycache__*
 *.pyc
