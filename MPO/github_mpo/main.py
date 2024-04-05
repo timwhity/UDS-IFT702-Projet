@@ -60,7 +60,12 @@ def main():
                         help='load path')
     args = parser.parse_args()
 
-    env = gymnasium.make("ALE/DemonAttack-v5")
+    if args.render:
+        env = gymnasium.make("ALE/DemonAttack-v5", render_mode='human')
+    else:
+        env = gymnasium.make("ALE/DemonAttack-v5")
+    # env = gymnasium.make("LunarLander-v2")
+    
     model = MPO(
         args.device,
         env,
