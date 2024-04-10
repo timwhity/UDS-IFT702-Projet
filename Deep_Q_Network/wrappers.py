@@ -9,7 +9,7 @@ import copy
 import cv2
 cv2.ocl.setUseOpenCL(False)
 
-def make_env(env, stack_frames=True, episodic_life=True, clip_rewards=False, scale=False):
+def make_env(env, stack_frames=True, episodic_life=True, clip_rewards=False, scale=False, stay_alive_reward=0.1):
     if episodic_life:
         env = EpisodicLifeEnv(env)
 
@@ -24,6 +24,21 @@ def make_env(env, stack_frames=True, episodic_life=True, clip_rewards=False, sca
     if clip_rewards:
         env = ClipRewardEnv(env)
     return env
+
+class StayAliveRewardEnv(gym.RewardWrapper):
+    def __init__(self, env, stay_alive_reward=0.1):
+        """Ajoute un reward pour rester en vie à chaque pas de temps.
+        
+        Args:
+            env: L'environnement Gym à wrapper.
+            stay_alive_reward: Le montant du reward à ajouter pour chaque pas de temps où l'agent reste en vie.
+        """
+        super(StayAliveRewardEnv, self).__init__(env)
+        self.stay_alive_reward = stay_alive_reward
+
+    def reward(self, reward):
+        """Ajoute le stay_alive_reward au reward original."""
+        return reward + self.stay_alive_reward
 
 class RewardScaler(gym.RewardWrapper):
 
@@ -146,7 +161,7 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.was_real_reset = False
 
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
+        obs, reward, done,_ , info = self.env.step(action)
         self.was_real_done = done
         # check current lives, make loss of life terminal,
         # then update lives to handle bonus lives
@@ -169,7 +184,7 @@ class EpisodicLifeEnv(gym.Wrapper):
             self.was_real_reset = True
         else:
             # no-op step to advance from terminal/lost life state
-            obs, _, _, _ = self.env.step(0)
+            obs, _, _, _, _ = self.env.step(0)
             self.was_real_reset = False
         self.lives = self.env.unwrapped.ale.lives()
         return obs
