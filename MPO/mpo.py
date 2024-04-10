@@ -123,7 +123,11 @@ class MPO(object):
         self.env = env
 
         # the number of dimensions of state space
-        self.ds = env.observation_space.shape[0]
+        # self.ds = env.observation_space.shape[0]
+        self.ds = 1
+        for dim in env.observation_space.shape:
+            self.ds *= dim
+
         self.da = env.action_space.n
 
         self.ε_dual = dual_constraint
@@ -226,6 +230,10 @@ class MPO(object):
                     action_batch = torch.from_numpy(np.stack(action_batch)).type(torch.float32).to(self.device)  # (K, da) or (K,)
                     next_state_batch = torch.from_numpy(np.stack(next_state_batch)).type(torch.float32).to(self.device)  # (K, ds)
                     reward_batch = torch.from_numpy(np.stack(reward_batch)).type(torch.float32).to(self.device)  # (K,)
+                    
+                    # Vectorization of the batch
+                    state_batch = state_batch.view(-1, self.ds)
+                    next_state_batch = next_state_batch.view(-1, self.ds)
 
                     # Policy Evaluation
                     # [2] 3 Policy Evaluation (Step 1)

@@ -37,6 +37,9 @@ class CriticDiscrete(nn.Module):
         super(CriticDiscrete, self).__init__()
         self.env = env
         self.ds = env.observation_space.shape[0]
+        # self.ds = 1
+        # for dim in env.observation_space.shape:
+        #     self.ds *= dim
         self.da = env.action_space.n
         self.lin1 = nn.Linear(self.ds + self.da, 256)
         self.lin2 = nn.Linear(256, 256)

@@ -4,6 +4,10 @@ from mpo import MPO
 
 gymnasium.logger.set_level(40)
 
+# python3 main.py --device cuda:0 --evaluate_episode_maxstep 600 --sample_episode_maxstep 600
+# python3 main.py --device cuda:0 --kl_mean_constraint 0.001 --alpha_mean_scale 0.5
+# python3 main.py   --device cuda:0   --render --load logs/model/model_latest.pt
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -61,9 +65,9 @@ def main():
     args = parser.parse_args()
 
     if args.render:
-        env = gymnasium.make("ALE/DemonAttack-v5", render_mode='human')
+        env = gymnasium.make("DemonAttack-v4", render_mode='human')
     else:
-        env = gymnasium.make("ALE/DemonAttack-v5")
+        env = gymnasium.make("DemonAttack-v4")
     # env = gymnasium.make("LunarLander-v2")
     
     model = MPO(
