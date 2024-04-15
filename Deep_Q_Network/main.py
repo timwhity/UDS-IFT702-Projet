@@ -4,11 +4,11 @@ import math
 import random
 import numpy as np
 import time
-
+import csv 
 import gym
+import os
 
 from wrappers import *
-from gym.wrappers.monitoring.video_recorder import VideoRecorder
 from memory import ReplayMemory
 from models import *
 
@@ -34,10 +34,10 @@ def select_action(state):
     steps_done += 1
     if sample > eps_threshold:
         with torch.no_grad():
-            # return policy_net(state.to('cuda')).max(1)[1].view(1,1) #ligne initiale
+            # return policy_net(state.to('cuda')).max(1)[1].view(1,1) # avec cuda
             return policy_net(state).max(1)[1].view(1,1)
     else:
-        return torch.tensor([[random.randrange(4)]], device=device, dtype=torch.long)
+        return torch.tensor([[random.randrange(6)]], device=device, dtype=torch.long)
 
 
 def optimize_model():
@@ -58,9 +58,9 @@ def optimize_model():
     """
     batch = Transition(*zip(*transitions))
 
-    # actions = tuple((map(lambda a: torch.tensor([[a]], device='cuda'), batch.action))) #OL
+    # actions = tuple((map(lambda a: torch.tensor([[a]], device='cuda'), batch.action))) # avec cuda
     actions = tuple((map(lambda a: torch.tensor([[a]], device='cpu'), batch.action)))
-    # rewards = tuple((map(lambda r: torch.tensor([r], device='cuda'), batch.reward))) # OL
+    # rewards = tuple((map(lambda r: torch.tensor([r], device='cuda'), batch.reward))) # avec cuda
     rewards = tuple((map(lambda r: torch.tensor([r], device='cpu'), batch.reward)))
 
     non_final_mask = torch.tensor(
@@ -68,12 +68,12 @@ def optimize_model():
         device=device, dtype=torch.bool) # changmeent uint8 to bool
 
     # non_final_next_states = torch.cat([s for s in batch.next_state
-    #                                    if s is not None]).to('cuda') # OL
+    #                                    if s is not None]).to('cuda') # avec cuda
     non_final_next_states = torch.cat([s for s in batch.next_state
                                        if s is not None]).to('cpu')
 
 
-    # state_batch = torch.cat(batch.state).to('cuda') #OL
+    # state_batch = torch.cat(batch.state).to('cuda') # avec cuda
     state_batch = torch.cat(batch.state).to('cpu')
     action_batch = torch.cat(actions)
     reward_batch = torch.cat(rewards)
@@ -85,12 +85,13 @@ def optimize_model():
     expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
-
     optimizer.zero_grad()
     loss.backward()
     for param in policy_net.parameters():
         param.grad.data.clamp_(-1, 1)
     optimizer.step()
+
+    return loss
 
 def get_state(obs): 
     """
@@ -101,20 +102,26 @@ def get_state(obs):
     state = torch.from_numpy(state) # convertit le tableau numpy en tenseur pytorch
     return state.unsqueeze(0) # ajoute une nouvelle dimension à la position 0 
 
-def train(env, n_episodes, render=False):
+def train(env, n_episodes, render=False, max_timesteps=1000):
     steps_done_ = [] 
     episode_ = [] 
     t_ = [] 
     total_reward_ = [] 
+    loss_values = [] 
     for episode in range(n_episodes):
         obs = env.reset()
         state = get_state(obs)
         total_reward = 0.0
-        for t in count():
+        for t in range(max_timesteps): # while True : 
             action = select_action(state)
+            print('les actions sont', action)
             if render:
                 env.render()
-            obs, reward, done, info = env.step(action)
+            # print("env steop action", env.step(action))
+            obs = env.step(action)[0]
+            reward = env.step(action)[1]
+            done = env.step(action)[2]
+
             total_reward += reward
             if not done:
                 next_state = get_state(obs)
@@ -124,7 +131,9 @@ def train(env, n_episodes, render=False):
             memory.push(state, action.to('cpu'), next_state, reward.to('cpu'))
             state = next_state
             if steps_done > INITIAL_MEMORY:
-                optimize_model()
+                loss = optimize_model()
+                if loss is not None:
+                    loss_values.append(loss)
                 if steps_done % TARGET_UPDATE == 0:
                     target_net.load_state_dict(policy_net.state_dict())
             if done:
@@ -133,12 +142,21 @@ def train(env, n_episodes, render=False):
         episode_.append(episode)
         t_.append(t)
         total_reward_.append(total_reward)
-        if episode % 20 == 0:
-                print('Total steps: {} \t Episode: {}/{} \t Total reward: {}'.format(steps_done, episode, t, total_reward))
+        # if episode % 20 == 0:
+                # print('Total steps: {} \t Episode: {}/{} \t Total reward: {} \t Loss value: {}'.format(steps_done, episode, t, total_reward, loss_values))
     env.close()
-    return steps_done_, episode_, t_, total_reward_
 
-def test(env, n_episodes, policy, render=True):
+    with open('test.csv', 'w', newline='') as csvfile:
+        fieldnames = ['episode', 'steps_done', 'timestep', 'total_reward', 'loss']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for i in range(len(episode_)):
+            loss = loss_values[i] if i < len(loss_values) else None
+            writer.writerow({'episode': episode_[i], 'steps_done': steps_done_[i], 'timestep': t_[i], 'total_reward': total_reward_[i], 'loss': loss})
+    
+    return steps_done_, episode_, t_, total_reward_, loss_values
+
+def test(env, n_episodes, policy, render=False):
     for episode in range(n_episodes):
         obs = env.reset()
         state = get_state(obs)
@@ -167,19 +185,23 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # hyperparameters
-    BATCH_SIZE = 32
+    BATCH_SIZE = 32 
     GAMMA = 0.99
     EPS_START = 1
     EPS_END = 0.02
-    EPS_DECAY = 1000000
+    EPS_DECAY = 1000 #etait a 1000000
     TARGET_UPDATE = 1000
-    # RENDER = 'Human'
     lr = 1e-4
     INITIAL_MEMORY = 10000
     MEMORY_SIZE = 10 * INITIAL_MEMORY
 
     # create networks
-    policy_net = DQN(n_actions=4).to(device)
+    model_path = "demonattack_model"
+    if os.path.exists(model_path):
+        policy_net = torch.load(model_path).to(device)
+        print("Modèle chargé avec succès.")
+    else:
+        policy_net = DQN(n_actions=4).to(device)
     target_net = DQN(n_actions=4).to(device)
     target_net.load_state_dict(policy_net.state_dict())
 
@@ -195,26 +217,6 @@ if __name__ == '__main__':
     # initialize replay memory
     memory = ReplayMemory(MEMORY_SIZE)
 
-    # moi
-    # before_training = "before_training.mp4"
-    # before_training = f'DemonAttack_video_{int(time.time())}.mp4'
-    # video = VideoRecorder(env, before_training)
-    # video_dir = f'./data_DemonAttack_video_{int(time.time())}'
-    # env.reset()
-    # for i in range (200):
-    # # action = env.action_space.sample()
-    # # while env.step(action)[3] != False:
-    #   video.capture_frame()
-    #   action = env.action_space.sample()
-    #   obs, reward, done, info = env.step(action)
-    #   env.render("rgb_array")
-
-    # video.close()
-    #env.close()
-    #env = gym.wrappers.Monitor(env, video_dir)
-    # train model
-    Train = train(env, 30)
-    torch.save(policy_net, "demonattack_model2")
-    policy_net = torch.load("demonattack_model2")
-    print("train terminé, voici le test : ")
-    test(env, 1, policy_net, render=False)
+    Train = train(env, 10)
+    torch.save(policy_net, "demonattack_model")
+    policy_net = torch.load("demonattack_model")
