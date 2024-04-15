@@ -9,7 +9,7 @@ import copy
 import cv2
 cv2.ocl.setUseOpenCL(False)
 
-def make_env(env, stack_frames=True, episodic_life=True, clip_rewards=False, scale=False, stay_alive_reward=0.1):
+def make_env(env, stack_frames=True, episodic_life=True, scale=False, stay_alive_reward=0.5):
     if episodic_life:
         env = EpisodicLifeEnv(env)
 
@@ -21,12 +21,13 @@ def make_env(env, stack_frames=True, episodic_life=True, clip_rewards=False, sca
     env = WarpFrame(env)
     if stack_frames:
         env = FrameStack(env, 4)
-    if clip_rewards:
-        env = ClipRewardEnv(env)
+    env = StayAliveRewardEnv(env, stay_alive_reward=stay_alive_reward) # ajout du reward pour récompenser l'agent 
+
     return env
 
+
 class StayAliveRewardEnv(gym.RewardWrapper):
-    def __init__(self, env, stay_alive_reward=0.1):
+    def __init__(self, env, stay_alive_reward=0.5):
         """Ajoute un reward pour rester en vie à chaque pas de temps.
         
         Args:
@@ -172,7 +173,7 @@ class EpisodicLifeEnv(gym.Wrapper):
             # the environment advertises done.
             done = True
         self.lives = lives
-        return obs, reward, done, info
+        return obs, reward, done,_, info
 
     def reset(self):
         """Reset only when lives are exhausted.
@@ -202,7 +203,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         total_reward = 0.0
         done = None
         for _ in range(self._skip):
-            obs, reward, done, info = self.env.step(action)
+            obs, reward, done, a, info = self.env.step(action)
             self._obs_buffer.append(obs)
             total_reward += reward
             if done:
@@ -242,7 +243,7 @@ class NoopResetEnv(gym.Wrapper):
         assert noops > 0
         obs = None
         for _ in range(noops):
-            obs, _, done, _ = self.env.step(0)
+            obs, _, done, _, _ = self.env.step(0)
             if done:
                 obs = self.env.reset()
         return obs
