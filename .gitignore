@@ -1,1 +1,9 @@
+# Environments
 .venv
+
+# Logs
+*logs*
+
+# pycache
+*__pycache__*
+*.pyc

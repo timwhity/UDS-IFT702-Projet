@@ -1,1 +1,8 @@
 gymnasium[atari, accept-rom-license]
+torch
+scipy
+tensorboardX
+numpy 
+scipy
+tqdm
+argparse
